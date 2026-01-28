@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我们的秘密基地</title>
+    <style>
+        /* --- 基础样式 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; height: 100vh; background-color: #2f3136; color: #dcddde; display: flex; overflow: hidden; }
+
+        /* --- 布局容器 --- */
+        .container { display: flex; width: 100%; height: 100%; }
+
+        /* --- 1. 左侧边栏 (未来扩展区) --- */
+        .sidebar {
+            width: 260px;
+            background-color: #202225;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 10px;
+            border-right: 1px solid #1e1f22;
+        }
+        .sidebar-title { font-weight: bold; color: #fff; margin-bottom: 20px; padding-left: 10px; font-size: 1.1em; }
+        .channel-list { list-style: none; }
+        .channel-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #8e9297;
+            transition: 0.2s;
+        }
+        .channel-item:hover, .channel-item.active { background-color: #393c43; color: #fff; }
+        .channel-item::before { content: "# "; color: #6d6f78; }
+
+        /* --- 2. 主聊天窗口 --- */
+        .main-chat { flex: 1; display: flex; flex-direction: column; background-color: #36393f; position: relative; }
+        
+        /* 顶部标题栏 */
+        .chat-header {
+            height: 50px;
+            border-bottom: 1px solid #26272d;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            font-weight: bold;
+            color: #fff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* 消息滚动区 */
+        .messages-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto; /* 允许上下滚动 */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 消息气泡样式 */
+        .message { display: flex; flex-direction: column; }
+        .message-info { font-size: 0.8em; color: #a3a6aa; margin-bottom: 4px; }
+        .username { font-weight: bold; color: #fff; margin-right: 8px; cursor: pointer; }
+        .username:hover { text-decoration: underline; }
+        .message-content {
+            line-height: 1.5;
+            color: #dcddde;
+            word-wrap: break-word; /* 防止长单词撑破 */
+        }
+        
+        /* 自己的消息稍微特别一点 (模拟) */
+        .message.self { align-items: flex-end; }
+        .message.self .message-content {
+            background-color: #0084ff;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 12px 12px 0 12px;
+            display: inline-block;
+        }
+
+        /* --- 3. 底部输入框 --- */
+        .input-area {
+            padding: 20px;
+            background-color: #36393f;
+        }
+        .input-wrapper {
+            background-color: #40444b;
+            border-radius: 8px;
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+        }
+        #msg-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            padding: 15px 0;
+            color: #fff;
+            outline: none;
+            font-size: 1rem;
+        }
+        #send-btn {
+            background: none;
+            border: none;
+            color: #b9bbbe;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 10px;
+        }
+        #send-btn:hover { color: #fff; }
+
+    </style>
+</head>
+<body>
+
+<div id="login-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#2f3136; z-index:100; display:flex; align-items:center; justify-content:center;">
+    <div style="background:#36393f; padding:40px; border-radius:8px; width:320px; text-align:center;">
+        <h2 style="color:white; margin-bottom:20px;">欢迎回来</h2>
+        <input type="text" id="auth-user" placeholder="用户名" style="width:100%; padding:10px; margin-bottom:10px; border-radius:4px; border:none;">
+        <input type="password" id="auth-pass" placeholder="密码" style="width:100%; padding:10px; margin-bottom:20px; border-radius:4px; border:none;">
+        <button onclick="handleAuth('login')" style="width:100%; padding:10px; background:#5865f2; color:white; border:none; border-radius:4px; cursor:pointer;">登录</button>
+        <p style="margin-top:15px; font-size:0.8em;">没有账号？<a href="#" onclick="handleAuth('register')" style="color:#00aff4;">立即注册</a></p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="sidebar-title">🎮 朋友们的基地</div>
+        <ul class="channel-list">
+            <li class="channel-item active">闲聊大厅</li>
+            <li class="channel-item">游戏组队</li>
+            <li class="channel-item">AI 机器人 (未开发)</li>
+            <li class="channel-item">你画我猜 (未开发)</li>
+        </ul>
+    </div>
+
+    <div class="main-chat">
+        <div class="chat-header"># 闲聊大厅</div>
+        
+        <div class="messages-area" id="messages-area">
+            <div class="message">
+                <div class="message-info"><span class="username">系统助手</span> 12:00</div>
+                <div class="message-content">欢迎来到你的新论坛！这里现在只有前端界面哦。</div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input type="text" id="msg-input" placeholder="发送消息给 #闲聊大厅" autocomplete="off">
+                <button id="send-btn">发送</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+    var socket = io(); // 1. 拨通服务器的“电话专线”
+
+    let myName = localStorage.getItem('chat-username');
+
+    // 如果本地有存用户名，直接隐藏登录层（简单处理，进阶可以用 Token）
+    if (myName) {
+        document.getElementById('login-overlay').style.display = 'none';
+    }
+
+    async function handleAuth(type) {
+        const username = document.getElementById('auth-user').value;
+        const password = document.getElementById('auth-pass').value;
+
+        if (!username || !password) return alert("请填满信息");
+
+        const response = await fetch(`/${type}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert(type === 'login' ? "登录成功！" : "注册成功，请登录");
+            if (type === 'login') {
+                localStorage.setItem('chat-username', result.username);
+                location.reload(); // 刷新页面进入聊天室
+            }
+        } else {
+            alert(result.error);
+        }
+    }
+    const input = document.getElementById('msg-input');
+    const sendBtn = document.getElementById('send-btn');
+    const msgArea = document.getElementById('messages-area');
+
+    // 2. 发送消息给服务器
+    function sendMessage() {
+        if (input.value.trim()) {
+            console.log('正在发送:', input.value);
+            // 发送一个对象，包含昵称和内容（以后还可以加头像、时间）
+            socket.emit('chat message', {
+                user: myName,
+                text: input.value
+            });
+            input.value = '';
+            input.focus();
+        }
+    }
+
+    sendBtn.onclick = sendMessage;
+    input.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
+
+    // 3. 核心：监听服务器广播回来的消息
+    socket.on('chat message', function(data) {
+        console.log('收到服务器广播:', data);
+        // 判断是不是自己发的（这里暂时用简单逻辑判断，以后可以加 ID）
+        const isSelf = data.user === myName;
+        addMessageToUI(data.user, data.text, isSelf);
+    });
+
+    // 把消息渲染到页面上的函数
+    function addMessageToUI(user, text, isSelf) {
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const msgDiv = document.createElement('div');
+        msgDiv.className = isSelf ? 'message self' : 'message';
+        
+        msgDiv.innerHTML = `
+            <div class="message-info"><span class="username">${user}</span> ${time}</div>
+            <div class="message-content">${text}</div>
+        `;
+        
+        msgArea.appendChild(msgDiv);
+        msgArea.scrollTop = msgArea.scrollHeight;
+    }
+</script>
+
+
+</body>
+</html>
