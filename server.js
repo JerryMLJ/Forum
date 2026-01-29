@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const path = require('path');
 
 const app = express();
@@ -109,3 +109,4 @@ server.listen(PORT, () => {
     console.log(`🚀 论坛服务器已启动！`);
     console.log(`🏠 本地访问: http://localhost:${PORT}`);
 });
+
