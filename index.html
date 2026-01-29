@@ -193,6 +193,14 @@
     const input = document.getElementById('msg-input');
     const sendBtn = document.getElementById('send-btn');
     const msgArea = document.getElementById('messages-area');
+    socket.on('load history', function(messages) {
+        // 先清空欢迎语（可选）
+        msgArea.innerHTML = ''; 
+        messages.forEach(msg => {
+            // MongoDB 存的时间是 msg.time
+            addMessageToUI(msg.user, msg.text, msg.user === myName, msg.time);
+        });
+    });
 
     // 2. 发送消息给服务器
     function sendMessage() {
@@ -220,21 +228,26 @@
     });
 
     // 把消息渲染到页面上的函数
-    function addMessageToUI(user, text, isSelf) {
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function addMessageToUI(user, text, isSelf, timestamp) {
+        // 如果有传入时间（历史记录），就格式化它；如果是新消息，就用当前时间
+        const dateObj = timestamp ? new Date(timestamp) : new Date();
+        const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
         const msgDiv = document.createElement('div');
         msgDiv.className = isSelf ? 'message self' : 'message';
         
+        // 这里的 HTML 结构要匹配你之前的 CSS 样式
         msgDiv.innerHTML = `
-            <div class="message-info"><span class="username">${user}</span> ${time}</div>
+            <div class="message-info"><span class="username">${user}</span> ${timeStr}</div>
             <div class="message-content">${text}</div>
         `;
         
         msgArea.appendChild(msgDiv);
-        msgArea.scrollTop = msgArea.scrollHeight;
-    }
+        msgArea.scrollTop = msgArea.scrollHeight; // 自动滚动到底部
+    }}
 </script>
 
 
 </body>
+
 </html>
